@@ -5,15 +5,19 @@ defmodule Santorini do
 
 
   def encode_Map(map) do
+
     #json = Poison.encode!(map)
     {_, p_Value} = Map.fetch(map, :players)
     {_, s_Value} = Map.fetch(map, :spaces)
     {_, t_Value} = Map.fetch(map, :turn)
-    json = %{
-      "players" => p_Value,
-      "spaces" => s_Value,
-      "turn" => t_Value
-    }
+    json = [
+      {"players", p_Value},
+      {"spaces", s_Value},
+      {"turn", t_Value}
+    ]
+
+    json = "{\"players\":#{p_Value},\"spaces\":#{s_Value},\"turn\":#{t_Value}}"
+    IO.puts json
 
     # keys = [:players, :spaces, :turn]
     # IO.inspect keys
@@ -25,8 +29,6 @@ defmodule Santorini do
     #   end) |> Enum.intersperse(","),
     #   "}"
     # ]
-    IO.puts "send json: "
-    IO.inspect json
   end
   @doc """
   send json to play-random. and get result json back
@@ -174,90 +176,6 @@ defmodule Santorini do
     end)
 
     map
-  end
-
-  def jsontomap(json) do
-    regex = Regex.replace(~r/([a-z0-9+]):/, json, "\"\\1\":")
-    json = regex |> String.replace("'", "\"") |> Poison.decode!
-
-    json = Enum.reduce(json, %{}, fn({key, value}, acc) ->
-      Map.merge(acc, %{ String.to_atom(key) => value })
-    end)
-    struct(Json, json)
-
-  end
-
-  def updateJSON(map) do
-
-    IO.puts "Please pick chess:"
-    IO.inspect hd(map.players) # print current chess
-
-    chessChoose = IO.gets("")
-    chessChoose = String.to_integer(String.trim(chessChoose))
-    #chessLoc = Enum.at(hd(map.players), chessChoose-1) # list
-
-    IO.puts "Please pick move:"
-    move = IO.gets("")
-    pattern = :binary.compile_pattern([" ", "\n"])
-    move = String.splitter(move, pattern)
-    |> Enum.take(2)# list
-    |> Enum.map(fn x -> String.to_integer(x) end )
-
-    remain = if chessChoose=="1" do 1 else 0 end
-
-    update = [[Enum.at(hd(map.players), remain)] ++ [move]] ++ tl(map.players)
-
-    {_, map} = Map.get_and_update(map, :players, fn p ->
-      {p, update}
-    end)
-
-    IO.puts "Please pick adjacent cell to build:"
-    buildCell = IO.gets("")
-    pattern = :binary.compile_pattern([" ", "\n"])
-    buildCell = String.splitter(buildCell, pattern)
-    |> Enum.take(2)# list
-    |> Enum.map(fn x -> String.to_integer(x) end )
-
-
-    currentRow = Enum.at(map.spaces, hd(buildCell)-1)
-    currentValue = Enum.at(currentRow, Enum.at(buildCell, 1)-1) # get item value at index
-
-    updateRow = List.replace_at(currentRow, Enum.at(buildCell, 1)-1, currentValue+1)
-    updateSpace = List.replace_at(map.spaces, hd(buildCell)-1, updateRow)
-
-    {_, map} = Map.get_and_update(map, :spaces, fn p ->
-      {p, updateSpace}
-    end)
-
-    map
-
-  end
-
-  def maptostring(map) do
-    IO.inspect
-    keys = Map.keys(map)
-    IO.inspect keys
-    data = [
-      "{",
-      Enum.map(keys, fn k ->
-
-        v = map[k]
-        [Poison.encode!(k), ":", Poison.encode!(v)]
-      end) |> Enum.intersperse(","),
-      "}"
-    ]
-    IO.inspect data
-    # json = "
-    # {
-    #   \"players\":#{map.players},
-    #   \"spaces\": #{map.spaces},
-    #   \"turn\": #{map.turn}
-    # }
-    # "
-    # IO.inspect json
-  end
-  # convert map to json
-  def writeJSON(map) do
   end
 
   def main() do
