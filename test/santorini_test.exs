@@ -1,10 +1,11 @@
 defmodule SantoriniTest do
   use ExUnit.Case
-  doctest Santorini
+  doctest Santorini.CLI
 
 
-  test "read simple json" do
+  test "read json" do
 
-    Santorini.main()
+    Santorini.CLI.main()
+
   end
 end
