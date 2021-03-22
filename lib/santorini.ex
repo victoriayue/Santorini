@@ -20,19 +20,6 @@ defmodule Santorini.CLI do
     json = "{\"players\":#{p_Value},\"spaces\":#{s_Value},\"turn\":#{t_Value}}\n"
     json
   end
-  @doc """
-  send json to play-random. and get result json back
-  """
-  def send(json) do
-    path = System.find_executable("win/play-random.exe")
-    port = Port.open({:spawn, path}, [:binary])
-    Port.command(port, json)
-
-    receive do
-      {^port, {:data, result}} ->
-        result
-    end
-  end
 
   def show_board(json) do
     path = System.find_executable("win/gui.exe")
@@ -85,7 +72,7 @@ defmodule Santorini.CLI do
       randMove = Enum.random(valid)
       r = Enum.at(randMove, 0)
       c = Enum.at(randMove, 1)
-      build = Enum.at(Enum.at(spaces, r), c)
+      build = Enum.at(Enum.at(spaces, r-1), c-1)
 
       # invalid case:
       # cell out of bound,
@@ -167,14 +154,10 @@ defmodule Santorini.CLI do
     {_, players} = Map.fetch(map, :players)
     [cpRow, cpCol] = Enum.at(Enum.at(players, 0), 0)
 
-    # the index of current player. index need to -1
-    # cpRow = cpRow - 1
-    # cpCol = cpCol - 1
-
     # get current spaces
     {_, spaces} = Map.fetch(map, :spaces)
     # get building level on current cell. The position num is index+1
-    currentLevel = Enum.at(Enum.at(spaces, cpRow), cpCol)
+    currentLevel = Enum.at(Enum.at(spaces, cpRow-1), cpCol-1)
 
     # get valid random move
     [r, c] = valid_move(cpRow, cpCol, spaces, players, currentLevel)
@@ -183,10 +166,8 @@ defmodule Santorini.CLI do
     if [r,c] == [-1, -1] do
       # pick second player
       [cpRow, cpCol] = Enum.at(Enum.at(players, 0), 1)
-      # cpRow = cpRow - 1
-      # cpCol = cpCol - 1
       {_, spaces} = Map.fetch(map, :spaces)
-      currentLevel = Enum.at(Enum.at(spaces, cpRow), cpCol)
+      currentLevel = Enum.at(Enum.at(spaces, cpRow-1), cpCol-1)
       [r, c] = valid_move(cpRow, cpCol, spaces, players, currentLevel)
     end
     # when update to Map, need +1
@@ -205,9 +186,6 @@ defmodule Santorini.CLI do
     SECOND, build based on chosed player
     '''
     # build
-    # build based on randMove
-
-    # get a valid build option
     {[r,c], randLevel} = valid_build(randMove, spaces, players)
 
     # update spaces
